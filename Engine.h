@@ -5,6 +5,9 @@
 #include <GL/glut.h>
 
 #include "Matrix.h"
+#include "AABB.h"
+
+#include <vector>
 
 struct Renderer;
 
@@ -12,13 +15,20 @@ struct Engine {
     bool buttonPressed;
     int startx, starty;
     int zoomFactor;
+    bool wireframe;
+
     Matrix rotMatrix;
+    int level;
+    int maxLevels;
+    float radius;
 
     float cx, cy, cz; /* model center */
     GLuint modelVao;
     GLuint wireVao;
     GLuint modelVbo;
     GLuint modelIbo;
+    GLuint treeVbo;
+    GLuint treeIbo;
 
     int numVertices, numElements;
 

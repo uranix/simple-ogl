@@ -55,6 +55,7 @@ struct Translate : public Matrix {
 };
 
 struct Scale : public Matrix {
+    Scale(float s) : Scale(s, s, s) { }
     Scale(float sx, float sy, float sz) {
         m[0][0] = sx;
         m[1][1] = sy;

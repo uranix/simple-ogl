@@ -4,8 +4,6 @@
 #include "Renderer.h"
 #include "EngineFacede.h"
 
-#include <thread>
-
 class RendererFacede {
     static Renderer &instance() {
         static Renderer This;
@@ -24,12 +22,11 @@ public:
 
         instance().setProjection();
         EngineFacede::showScene(instance());
-
-        int delayms = instance().countFps();
         glUseProgram(0);
-        glutSwapBuffers();
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(delayms));
+//        glFlush();
+        glutSwapBuffers();
+//        glFinish();
 
         glutPostRedisplay();
     }

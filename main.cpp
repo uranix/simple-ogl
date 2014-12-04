@@ -3,8 +3,17 @@
 
 #include <iostream>
 
+#ifdef __FREEGLUT_STD_H__
+# include <GL/freeglut_ext.h>
+#endif
+
 int main(int argc, char **argv) {
     glutInit(&argc, argv);
+#ifdef __FREEGLUT_STD_H__
+//    glutInitContextVersion(3, 3);
+    glutInitContextProfile(GLUT_CORE_PROFILE);
+    glutInitContextFlags(GLUT_DEBUG);
+#endif
     glutInitWindowSize(800, 600);
     glutInitWindowPosition(100, 100);
     glutCreateWindow(EngineFacede::name());

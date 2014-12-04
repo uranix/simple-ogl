@@ -45,6 +45,7 @@ GLuint compileShader(GLenum eShaderType, const std::string &shaderFile) {
         }
 
         std::cerr << shaderType << " shader failed to compile with message " << infoLog.data() << std::endl;
+        exit(0);
     }
 
     return shader;
@@ -68,6 +69,7 @@ GLuint linkShaders(std::vector<GLuint> &shaders) {
         glGetProgramInfoLog(program, infoLogLength, NULL, infoLog.data());
 
         std::cerr << "Shader program failed to link with message " << infoLog.data() << std::endl;
+        exit(0);
     }
 
     for (auto shader : shaders)
@@ -91,39 +93,18 @@ Renderer::Renderer() {
     frames = 0;
     prevTime = 0;
 
-    maxFps = 240;
+    maxFps = 120;
 
     viewWidth = viewHeight = 1;
-
+/*
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
     glFrontFace(GL_CW);
-
+*/
     glEnable(GL_DEPTH_TEST);
     glDepthMask(GL_TRUE);
     glDepthFunc(GL_LEQUAL);
     glDepthRange(0, 1);
-}
-
-int Renderer::countFps() {
-    frames++;
-
-    float now = glutGet(GLUT_ELAPSED_TIME);
-    float elaps = 1e-3 * (now - prevTime);
-
-    if (frames >= 100) {
-        fps = frames / elaps;
-        std::cout << "fps: " << fps << std::endl;
-        prevTime = now;
-        frames = 0;
-    }
-
-    float waitTill = frames / maxFps;
-    if (elaps < waitTill) {
-        int ms = 1e3 * (waitTill - elaps);
-        return ms;
-    }
-    return 0;
 }
 
 void Renderer::setModelMatrix(const Matrix &m) {
@@ -140,6 +121,11 @@ void Renderer::setProjection() {
     GLuint perspectiveMatrix = glGetUniformLocation(program, "perspectiveMatrix");
     PerspectiveMatrix m(0.5f, 4.5f, 30, viewWidth / viewHeight);
     glUniformMatrix4fv(perspectiveMatrix, /*num*/1, /*row major*/GL_TRUE, m.data());
+}
+
+void Renderer::setColor(float r, float g, float b, float a) {
+    GLuint mainColor = glGetUniformLocation(program, "mainColor");
+    glUniform4f(mainColor, r, g, b, a);
 }
 
 void Renderer::reshape(GLint w, GLint h) {

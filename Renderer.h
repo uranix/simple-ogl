@@ -18,6 +18,7 @@ struct Renderer {
     Renderer();
     void setModelMatrix(const Matrix &m);
     void setViewMatrix(const Matrix &m);
+    void setColor(float r, float g, float b, float a);
     void setProjection();
     void reshape(int x, int y);
     int countFps();
