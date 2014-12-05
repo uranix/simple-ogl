@@ -3,10 +3,6 @@
 
 #include <iostream>
 
-#ifdef __FREEGLUT_STD_H__
-# include <GL/freeglut_ext.h>
-#endif
-
 int main(int argc, char **argv) {
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH | GLUT_ALPHA);
@@ -20,7 +16,6 @@ int main(int argc, char **argv) {
         return 1;
     }
     std::cout << "Using GLEW version " << glewGetString(GLEW_VERSION) << std::endl;
-
 
     RendererFacede::init();
     EngineFacede::init();

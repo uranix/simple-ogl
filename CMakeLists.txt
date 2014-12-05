@@ -1,12 +1,20 @@
 cmake_minimum_required(VERSION 2.8)
 project(opengl)
 
+set( glew-cmake_BUILD_SHARED OFF CACHE BOOL "foo")
+set( glew-cmake_BUILD_STATIC ON CACHE BOOL "bar")
+
+SET(FREEGLUT_BUILD_SHARED_LIBS OFF CACHE BOOL "baz")
+SET(FREEGLUT_BUILD_STATIC_LIBS ON CACHE BOOL "qux")
+
+set( FREEGLUT_BUILD_DEMOS OFF CACHE BOOL "quux")
+
 find_package(OpenGL REQUIRED)
-find_package(GLUT REQUIRED)
-find_package(GLEW REQUIRED)
 find_package(Threads)
-include_directories(${GLUT_INCLUDE_DIR})
-include_directories(${GLEW_INCLUDE_DIR})
+
+add_subdirectory(external/freeglut)
+add_subdirectory(external/glew)
+
 include_directories(${OPENGL_INCLUDE_DIR})
 
 list(APPEND CMAKE_CXX_FLAGS "-std=c++11 -g -Wall")
@@ -16,4 +24,4 @@ configure_file(shader.vert shader.vert COPYONLY)
 configure_file(shader.frag shader.frag COPYONLY)
 
 add_executable(main ${SOURCES})
-target_link_libraries(main ${GLUT_LIBRARIES} ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(main ${OPENGL_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} freeglut_static libglew_static)
