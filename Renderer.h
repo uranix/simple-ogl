@@ -8,11 +8,11 @@
 
 struct Renderer {
     GLuint program;
-    GLuint modelView;
-    GLuint normalMatrix;
-    GLuint projMatrix;
-    GLuint mainColor;
-    GLuint lightIntens;
+    GLint modelView;
+    GLint normalMatrix;
+    GLint projMatrix;
+    GLint mainColor;
+    GLint lightIntens;
 
     Matrix model;
     Matrix view;

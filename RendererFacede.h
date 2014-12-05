@@ -4,7 +4,14 @@
 #include "Renderer.h"
 #include "EngineFacede.h"
 
-#include <thread>
+#ifdef _WINDOWS
+# include <windows.h>
+#else
+# include <thread>
+inline void Sleep(int ms) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(ms));
+}
+#endif
 
 class RendererFacede {
     static Renderer &instance() {
@@ -49,7 +56,7 @@ public:
         glutSwapBuffers();
         int ms = instance().countFpsAndReturnWait();
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(ms));
+        Sleep(ms);
 
         glutPostRedisplay();
     }

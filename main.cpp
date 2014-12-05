@@ -15,6 +15,10 @@ int main(int argc, char **argv) {
         std::cerr << "GLEW failed to initialize. Error: " << glewGetErrorString(err) << std::endl;
         return 1;
     }
+    if (!GLEW_VERSION_3_3) {
+        std::cerr << "OpenGL 3.3 is not supported" << std::endl;
+        return 1;
+    }
     std::cout << "Using GLEW version " << glewGetString(GLEW_VERSION) << std::endl;
 
     RendererFacede::init();

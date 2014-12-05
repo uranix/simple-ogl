@@ -181,10 +181,10 @@ void Engine::loadMesh() {
 
     for (size_t i = 0; i < faceTree.size(); i++) {
         AABB box;
-        for (const auto &f : faceTree[i]) {
-            box.add(Point(vertexData[f.v1], center));
-            box.add(Point(vertexData[f.v2], center));
-            box.add(Point(vertexData[f.v3], center));
+        for (auto f = faceTree[i].begin(); f != faceTree[i].end(); f++) {
+            box.add(Point(vertexData[f->v1], center));
+            box.add(Point(vertexData[f->v2], center));
+            box.add(Point(vertexData[f->v3], center));
         }
 
         tree[i] = box;
@@ -194,11 +194,11 @@ void Engine::loadMesh() {
 
         if (ileft >= faceTree.size())
             continue;
-        for (const auto &f : faceTree[i]) {
-            if (box.hasOnLeft (f, vertexData, center))
-                faceTree[ileft ].push_back(f);
-            if (box.hasOnRight(f, vertexData, center))
-                faceTree[iright].push_back(f);
+        for (auto f = faceTree[i].begin(); f != faceTree[i].end(); f++) {
+            if (box.hasOnLeft (*f, vertexData, center))
+                faceTree[ileft ].push_back(*f);
+            if (box.hasOnRight(*f, vertexData, center))
+                faceTree[iright].push_back(*f);
         }
     }
 

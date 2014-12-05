@@ -55,8 +55,8 @@ GLuint compileShader(GLenum eShaderType, const std::string &shaderFile) {
 GLuint linkShaders(std::vector<GLuint> &shaders) {
     GLuint program = glCreateProgram();
 
-    for (auto shader : shaders)
-        glAttachShader(program, shader);
+    for (auto shader = shaders.begin(); shader != shaders.end(); shader++)
+        glAttachShader(program, *shader);
 
     glLinkProgram(program);
 
@@ -73,8 +73,8 @@ GLuint linkShaders(std::vector<GLuint> &shaders) {
         exit(0);
     }
 
-    for (auto shader : shaders)
-        glDetachShader(program, shader);
+    for (auto shader = shaders.begin(); shader != shaders.end(); shader++)
+        glDetachShader(program, *shader);
 
     return program;
 }

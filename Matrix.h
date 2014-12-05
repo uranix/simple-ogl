@@ -8,7 +8,7 @@
 
 class Matrix {
 protected:
-    constexpr static float degree = 0.017453292519943295769f;
+    static float degree() { return 0.017453292519943295769f; }
     float m[4][4];
     Matrix() {
         memset(m, 0, 4 * 4 * sizeof(float));
@@ -119,7 +119,10 @@ struct Translate : public Matrix {
 };
 
 struct Scale : public Matrix {
-    Scale(float s) : Scale(s, s, s) { }
+    Scale(float s) {
+        m[0][0] = m[1][1] = m[2][2] = s;
+        m[3][3] = 1;
+    }
     Scale(float sx, float sy, float sz) {
         m[0][0] = sx;
         m[1][1] = sy;
@@ -132,7 +135,7 @@ struct PerspectiveMatrix : public Matrix {
 public:
     PerspectiveMatrix(float zNear, float zFar, float vHalfAngleDegrees, float aspectRatio) {
         assert(zNear > 0 && zFar > zNear);
-        float S = 1.f / tanf(vHalfAngleDegrees * degree);
+        float S = 1.f / tanf(vHalfAngleDegrees * degree());
         m[0][0] = S / aspectRatio;
         m[1][1] = S;
         m[2][2] = (zFar + zNear) / (zNear - zFar);
@@ -157,8 +160,8 @@ public:
 struct RotateMatrix : public Matrix {
 public:
     RotateMatrix(float phid, float thetad) {
-        float phi = phid * degree;
-        float theta = thetad * degree;
+        float phi = phid * degree();
+        float theta = thetad * degree();
 
         float cf = cos(phi);
         float sf = sin(phi);

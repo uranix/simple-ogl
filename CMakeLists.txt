@@ -19,7 +19,9 @@ include_directories(${OPENGL_INCLUDE_DIR})
 include_directories(external/freeglut/include)
 include_directories(external/glew/include)
 
-list(APPEND CMAKE_CXX_FLAGS "-std=c++11 -g -Wall")
+if(UNIX)
+	list(APPEND CMAKE_CXX_FLAGS "-std=c++11 -g -Wall")
+endif()
 set(SOURCES main.cpp Engine.cpp Renderer.cpp EngineFacede.cpp tinyfiledialogs.c)
 
 configure_file(shader.vert shader.vert COPYONLY)
