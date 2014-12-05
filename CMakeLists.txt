@@ -15,7 +15,7 @@ find_package(Threads)
 if(UNIX)
 	list(APPEND CMAKE_CXX_FLAGS "-std=c++11 -g -Wall")
 else()
-	add_definitions("-D_CRT_SECURE_NO_WARNINGS=1 -DFREEGLUT_LIB_PRAGMAS=0")
+	add_definitions(-D_CRT_SECURE_NO_WARNINGS=1 -DFREEGLUT_LIB_PRAGMAS=0)
 endif()
 
 add_subdirectory(external/freeglut)
