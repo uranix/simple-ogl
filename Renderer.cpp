@@ -113,7 +113,7 @@ float Renderer::getFps() const {
 int Renderer::countFpsAndReturnWait() {
     frames++;
 
-    float now = glutGet(GLUT_ELAPSED_TIME);
+    float now = static_cast<float>(glutGet(GLUT_ELAPSED_TIME));
     float elaps = 1e-3f * (now - prevTime);
 
     if (frames >= 20) {
@@ -124,7 +124,7 @@ int Renderer::countFpsAndReturnWait() {
 
     float waitTill = frames / maxFps;
     if (elaps < waitTill) {
-        int ms = 1e3f * (waitTill - elaps);
+        int ms = static_cast<int>(1e3f * (waitTill - elaps));
         return ms;
     }
     return 0;
