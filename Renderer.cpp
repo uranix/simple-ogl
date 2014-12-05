@@ -114,7 +114,7 @@ int Renderer::countFpsAndReturnWait() {
     frames++;
 
     float now = glutGet(GLUT_ELAPSED_TIME);
-    float elaps = 1e-3 * (now - prevTime);
+    float elaps = 1e-3f * (now - prevTime);
 
     if (frames >= 20) {
         fps = frames / elaps;
@@ -124,7 +124,7 @@ int Renderer::countFpsAndReturnWait() {
 
     float waitTill = frames / maxFps;
     if (elaps < waitTill) {
-        int ms = 1e3 * (waitTill - elaps);
+        int ms = 1e3f * (waitTill - elaps);
         return ms;
     }
     return 0;
@@ -165,8 +165,8 @@ void Renderer::setColor(float r, float g, float b, float a) {
 }
 
 void Renderer::reshape(GLint w, GLint h) {
-    viewWidth = w;
-    viewHeight = h;
+    viewWidth = static_cast<float>(w);
+    viewHeight = static_cast<float>(h);
 }
 
 void Renderer::setLightIntens(float v) {

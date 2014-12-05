@@ -96,11 +96,11 @@ void Engine::zoom(int inc) {
 }
 
 void Engine::dragging(int dx, int dy) {
-    float w = viewWidth;
-    float h = viewHeight;
+    float w = static_cast<float>(viewWidth);
+    float h = static_cast<float>(viewHeight);
 
-    float x1 = (startx - 0.5 * w) / h;
-    float y1 = (0.5 * h - starty) / h;
+    float x1 = (startx - 0.5f * w) / h;
+    float y1 = (0.5f * h - starty) / h;
     float z1 = 1;
     float x2 = x1 + dx / h;
     float y2 = y1 - dy / h;
@@ -241,12 +241,12 @@ void Engine::loadMesh() {
 }
 
 Matrix Engine::getViewMatrix() {
-    float sf = exp(0.05 * zoomFactor) / radius;
+    float sf = exp(0.05f * zoomFactor) / radius;
     Matrix tmpMatrix((IdentityMatrix()));
 
     tmpMatrix.multWithLeft(rotMatrix);
     tmpMatrix.multWithLeft(Scale(sf));
-    tmpMatrix.multWithLeft(Translate(0, 0, -2));
+    tmpMatrix.multWithLeft(Translate(0.f, 0.f, -2.f));
 
     return tmpMatrix;
 }
@@ -262,8 +262,8 @@ void Engine::showScene(Renderer &r) {
 
     Matrix translateToCenter(Translate(-cx, -cy, -cz));
     Matrix mm(translateToCenter);
-    r.setColor(.8, .75, .5, 1);
-    r.setLightIntens(.5);
+    r.setColor(.8f, .75f, .5f, 1.f);
+    r.setLightIntens(.5f);
     r.setModelMatrix(mm);
 
     if (wireframe)
@@ -307,16 +307,16 @@ void Engine::showOverlay(Renderer &r) {
     r.setViewMatrix(IdentityMatrix());
     r.setModelMatrix(IdentityMatrix());
 
-    glColor4f(0, 0, 0, .8);
+    glColor4f(0, 0, 0, .8f);
 
-    int widthpx = 400;
-    int heightpx = 220;
+    float widthpx = 400.f;
+    float heightpx = 220.f;
 
     glBegin(GL_QUADS);
-    glVertex2f(10, 10);
-    glVertex2f(10, heightpx + 10);
-    glVertex2f(10 + widthpx, heightpx + 10);
-    glVertex2f(10 + widthpx, 10);
+    glVertex2f(10.f, 10.f);
+    glVertex2f(10.f, heightpx + 10.f);
+    glVertex2f(10.f + widthpx, heightpx + 10.f);
+    glVertex2f(10.f + widthpx, 10.f);
     glEnd();
 
     glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
@@ -324,18 +324,27 @@ void Engine::showOverlay(Renderer &r) {
     char buf[128];
     sprintf(buf, "%.2f", r.getFps());
 
-    float x1 = 20;
-    float x2 = 100;
-    float y = heightpx - 10;
+    float x1 = 20.f;
+    float x2 = 100.f;
+    float y = heightpx - 10.f;
 
-    putLine(x1, x2, y, "fps:", buf); y -= 20;
-    putLine(x1, x2, y, "mesh:", meshfile.empty() ? std::string("(no mesh loaded)") : meshfile); y -= 20;
-    putLine(x1, x2, y, "vertex count:", std::to_string(numVertices)); y -= 20;
-    putLine(x1, x2, y, "face count:", std::to_string(numElements / 3)); y -= 20;
-    putLine(x1, x2, y, "tree level:", std::to_string(level)); y -= 20;
-    putLine(x1, x2, y, "face culling:", cull ? "on" : "off"); y -= 20;
-    putLine(x1, x2, y, "wireframe:", wireframe ? "on" : "off"); y -= 30;
-    putLine(x1, x1, y, "", "Drag to rotate model, rotate wheel to zoom"); y -= 20;
-    putLine(x1, x1, y, "", "Esc, Q : quit,  +/-: change level,  L: load mesh"); y -= 20;
-    putLine(x1, x1, y, "", "W : toggle wireframe mode,  C: toggle face culling"); y -= 20;
+    putLine(x1, x2, y, "fps:", buf);
+    y -= 20.f;
+    putLine(x1, x2, y, "mesh:", meshfile.empty() ? std::string("(no mesh loaded)") : meshfile);
+    y -= 20.f;
+    putLine(x1, x2, y, "vertex count:", std::to_string(static_cast<long long>(numVertices)));
+    y -= 20.f;
+    putLine(x1, x2, y, "face count:", std::to_string(static_cast<long long>(numElements / 3)));
+    y -= 20.f;
+    putLine(x1, x2, y, "tree level:", std::to_string(static_cast<long long>(level)));
+    y -= 20.f;
+    putLine(x1, x2, y, "face culling:", cull ? "on" : "off");
+    y -= 20.f;
+    putLine(x1, x2, y, "wireframe:", wireframe ? "on" : "off");
+    y -= 30.f;
+    putLine(x1, x1, y, "", "Drag to rotate model, rotate wheel to zoom");
+    y -= 20.f;
+    putLine(x1, x1, y, "", "Esc, Q : quit,  +/-: change level,  L: load mesh");
+    y -= 20.f;
+    putLine(x1, x1, y, "", "W : toggle wireframe mode,  C: toggle face culling");
 }
