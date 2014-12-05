@@ -4,8 +4,8 @@ project(opengl)
 set( glew-cmake_BUILD_SHARED OFF CACHE BOOL "foo")
 set( glew-cmake_BUILD_STATIC ON CACHE BOOL "bar")
 
-SET(FREEGLUT_BUILD_SHARED_LIBS OFF CACHE BOOL "baz")
-SET(FREEGLUT_BUILD_STATIC_LIBS ON CACHE BOOL "qux")
+set(FREEGLUT_BUILD_SHARED_LIBS OFF CACHE BOOL "baz")
+set(FREEGLUT_BUILD_STATIC_LIBS ON CACHE BOOL "qux")
 
 set( FREEGLUT_BUILD_DEMOS OFF CACHE BOOL "quux")
 
@@ -16,6 +16,8 @@ add_subdirectory(external/freeglut)
 add_subdirectory(external/glew)
 
 include_directories(${OPENGL_INCLUDE_DIR})
+include_directories(external/freeglut/include)
+include_directories(external/glew/include)
 
 list(APPEND CMAKE_CXX_FLAGS "-std=c++11 -g -Wall")
 set(SOURCES main.cpp Engine.cpp Renderer.cpp EngineFacede.cpp tinyfiledialogs.c)
