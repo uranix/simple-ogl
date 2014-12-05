@@ -9,11 +9,7 @@
 
 int main(int argc, char **argv) {
     glutInit(&argc, argv);
-#ifdef __FREEGLUT_STD_H__
-//    glutInitContextVersion(3, 3);
-    glutInitContextProfile(GLUT_CORE_PROFILE);
-    glutInitContextFlags(GLUT_DEBUG);
-#endif
+    glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH | GLUT_ALPHA);
     glutInitWindowSize(800, 600);
     glutInitWindowPosition(100, 100);
     glutCreateWindow(EngineFacede::name());
@@ -25,7 +21,6 @@ int main(int argc, char **argv) {
     }
     std::cout << "Using GLEW version " << glewGetString(GLEW_VERSION) << std::endl;
 
-    glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
 
     RendererFacede::init();
     EngineFacede::init();

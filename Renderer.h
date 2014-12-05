@@ -8,6 +8,15 @@
 
 struct Renderer {
     GLuint program;
+    GLuint modelView;
+    GLuint normalMatrix;
+    GLuint projMatrix;
+    GLuint mainColor;
+    GLuint lightIntens;
+
+    Matrix model;
+    Matrix view;
+
     float prevTime;
     int frames;
     float fps;
@@ -16,12 +25,16 @@ struct Renderer {
     float viewWidth, viewHeight;
 
     Renderer();
+    void updateModelView();
     void setModelMatrix(const Matrix &m);
     void setViewMatrix(const Matrix &m);
     void setColor(float r, float g, float b, float a);
-    void setProjection();
+    void setLightIntens(float v);
+    void setPerspective();
+    void setOrtho();
     void reshape(int x, int y);
-    int countFps();
+    int countFpsAndReturnWait();
+    float getFps() const;
 };
 
 #endif

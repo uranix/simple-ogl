@@ -12,9 +12,11 @@ public:
     static void init();
     static Matrix getViewMatrix();
     static void showScene(Renderer &);
+    static void showOverlay(Renderer &);
     static void keyboard(unsigned char key, int x, int y);
     static void click(int button, int state, int x, int y);
     static void motion(int x, int y);
+    static void reshape(int w, int h);
     static const char *name();
 };
 

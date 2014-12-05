@@ -1,4 +1,5 @@
 #include "Renderer.h"
+#include "EngineFacede.h"
 #include "Matrix.h"
 
 #include <vector>
@@ -87,8 +88,15 @@ GLuint buildShaderProgram() {
     return linkShaders(shaders);
 }
 
-Renderer::Renderer() {
+Renderer::Renderer() : model(IdentityMatrix()), view(IdentityMatrix()) {
     program = buildShaderProgram();
+
+    modelView    = glGetUniformLocation(program, "modelView");
+    normalMatrix = glGetUniformLocation(program, "normalMatrix");
+    projMatrix   = glGetUniformLocation(program, "projMatrix");
+    mainColor    = glGetUniformLocation(program, "mainColor");
+    lightIntens  = glGetUniformLocation(program, "lightIntens");
+
     fps = 0;
     frames = 0;
     prevTime = 0;
@@ -96,39 +104,71 @@ Renderer::Renderer() {
     maxFps = 120;
 
     viewWidth = viewHeight = 1;
-/*
-    glEnable(GL_CULL_FACE);
-    glCullFace(GL_BACK);
-    glFrontFace(GL_CW);
-*/
-    glEnable(GL_DEPTH_TEST);
-    glDepthMask(GL_TRUE);
-    glDepthFunc(GL_LEQUAL);
-    glDepthRange(0, 1);
+}
+
+float Renderer::getFps() const {
+    return fps;
+}
+
+int Renderer::countFpsAndReturnWait() {
+    frames++;
+
+    float now = glutGet(GLUT_ELAPSED_TIME);
+    float elaps = 1e-3 * (now - prevTime);
+
+    if (frames >= 20) {
+        fps = frames / elaps;
+        prevTime = now;
+        frames = 0;
+    }
+
+    float waitTill = frames / maxFps;
+    if (elaps < waitTill) {
+        int ms = 1e3 * (waitTill - elaps);
+        return ms;
+    }
+    return 0;
 }
 
 void Renderer::setModelMatrix(const Matrix &m) {
-    GLuint modelMatrix = glGetUniformLocation(program, "modelMatrix");
-    glUniformMatrix4fv(modelMatrix, /*num*/1, /*row major*/GL_TRUE, m.data());
+    model = m;
+    updateModelView();
 }
 
 void Renderer::setViewMatrix(const Matrix &m) {
-    GLuint viewMatrix = glGetUniformLocation(program, "viewMatrix");
-    glUniformMatrix4fv(viewMatrix, /*num*/1, /*row major*/GL_TRUE, m.data());
+    view = m;
+    updateModelView();
 }
 
-void Renderer::setProjection() {
-    GLuint perspectiveMatrix = glGetUniformLocation(program, "perspectiveMatrix");
+void Renderer::updateModelView() {
+    Matrix tmp(model);
+    tmp.multWithLeft(view);
+    glUniformMatrix4fv(modelView, /*num*/1, /*row major*/GL_TRUE, tmp.data());
+
+    tmp.inverse();
+    tmp.transpose();
+    glUniformMatrix4fv(normalMatrix, 1, GL_TRUE, tmp.data());
+}
+
+void Renderer::setPerspective() {
     PerspectiveMatrix m(0.5f, 4.5f, 30, viewWidth / viewHeight);
-    glUniformMatrix4fv(perspectiveMatrix, /*num*/1, /*row major*/GL_TRUE, m.data());
+    glUniformMatrix4fv(projMatrix, /*num*/1, /*row major*/GL_TRUE, m.data());
+}
+
+void Renderer::setOrtho() {
+    OrthoMatrix m(0.5f, 4.5f, 1.0f, viewWidth / viewHeight);
+    glUniformMatrix4fv(projMatrix, /*num*/1, /*row major*/GL_TRUE, m.data());
 }
 
 void Renderer::setColor(float r, float g, float b, float a) {
-    GLuint mainColor = glGetUniformLocation(program, "mainColor");
     glUniform4f(mainColor, r, g, b, a);
 }
 
 void Renderer::reshape(GLint w, GLint h) {
     viewWidth = w;
     viewHeight = h;
+}
+
+void Renderer::setLightIntens(float v) {
+    glUniform1f(lightIntens, v);
 }

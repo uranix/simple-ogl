@@ -14,6 +14,9 @@ Matrix EngineFacede::getViewMatrix() {
 void EngineFacede::showScene(Renderer &r) {
     instance().showScene(r);
 }
+void EngineFacede::showOverlay(Renderer &r) {
+    instance().showOverlay(r);
+}
 void EngineFacede::keyboard(unsigned char key, int x, int y) {
     instance().keyboard(key, x, y);
 }
@@ -22,6 +25,9 @@ void EngineFacede::click(int button, int state, int x, int y) {
 }
 void EngineFacede::motion(int x, int y) {
     instance().motion(x, y);
+}
+void EngineFacede::reshape(int w, int h) {
+    instance().reshape(w, h);
 }
 const char *EngineFacede::name() {
     return Engine::name();
