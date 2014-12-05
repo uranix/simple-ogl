@@ -10,6 +10,10 @@
 
 std::string loadFileToString(const std::string &filename) {
     std::fstream f(filename, std::ios::in);
+    if (!f) {
+        std::cerr << "Could not open file `" << filename << "'" << std::endl;
+        exit(0);
+    }
     std::stringstream ss;
     ss << f.rdbuf();
     return ss.str();
