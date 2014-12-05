@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8)
-project(opengl)
+project(meshview)
 
 set( glew-cmake_BUILD_SHARED OFF CACHE BOOL "foo")
 set( glew-cmake_BUILD_STATIC ON CACHE BOOL "bar")
@@ -30,5 +30,5 @@ set(SOURCES main.cpp Engine.cpp Renderer.cpp EngineFacede.cpp tinyfiledialogs.c)
 configure_file(shader.vert shader.vert COPYONLY)
 configure_file(shader.frag shader.frag COPYONLY)
 
-add_executable(main ${SOURCES})
-target_link_libraries(main ${OPENGL_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} freeglut_static libglew_static)
+add_executable(meshview ${SOURCES})
+target_link_libraries(meshview ${OPENGL_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} freeglut_static libglew_static)
