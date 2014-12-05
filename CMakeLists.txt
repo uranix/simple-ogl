@@ -12,6 +12,12 @@ set( FREEGLUT_BUILD_DEMOS OFF CACHE BOOL "quux")
 find_package(OpenGL REQUIRED)
 find_package(Threads)
 
+if(UNIX)
+	list(APPEND CMAKE_CXX_FLAGS "-std=c++11 -g -Wall")
+else()
+	add_definitions("-D_CRT_SECURE_NO_WARNINGS=1 -DFREEGLUT_LIB_PRAGMAS=0")
+endif()
+
 add_subdirectory(external/freeglut)
 add_subdirectory(external/glew)
 
@@ -19,11 +25,6 @@ include_directories(${OPENGL_INCLUDE_DIR})
 include_directories(external/freeglut/include)
 include_directories(external/glew/include)
 
-if(UNIX)
-	list(APPEND CMAKE_CXX_FLAGS "-std=c++11 -g -Wall")
-else()
-	add_definitions("-D_CRT_SECURE_NO_WARNINGS=1 -DFREEGLUT_LIB_PRAGMAS=0")
-endif()
 set(SOURCES main.cpp Engine.cpp Renderer.cpp EngineFacede.cpp tinyfiledialogs.c)
 
 configure_file(shader.vert shader.vert COPYONLY)
