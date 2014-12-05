@@ -26,13 +26,19 @@ public:
     Matrix &multWithRight(const Matrix &right) {
         /* this = this * right */
         Matrix left = *this;
-        replaceWithProd(left, right);
+        if (this == &right)
+            replaceWithProd(left, left);
+        else
+            replaceWithProd(left, right);
         return *this;
     }
     Matrix &multWithLeft(const Matrix &left) {
         /* this = left * this */
         Matrix right = *this;
-        replaceWithProd(left, right);
+        if (this == &left)
+            replaceWithProd(right, right);
+        else
+            replaceWithProd(left, right);
         return *this;
     }
     void inverse() {

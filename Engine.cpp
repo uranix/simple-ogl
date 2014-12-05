@@ -99,18 +99,26 @@ void Engine::dragging(int dx, int dy) {
     float w = viewWidth;
     float h = viewHeight;
 
-    float scale = h / sensivity;
-
-    float x1 = (startx - 0.5 * w) / scale;
-    float y1 = (0.5 * h - starty) / scale;
+    float x1 = (startx - 0.5 * w) / h;
+    float y1 = (0.5 * h - starty) / h;
     float z1 = 1;
-    float x2 = x1 + dx / scale;
-    float y2 = y1 - dy / scale;
+    float x2 = x1 + dx / h;
+    float y2 = y1 - dy / h;
     float z2 = 1;
     float x3 = 0, y3 = 0, z3 = 1;
 
-    rotMatrix.multWithLeft(RotateAxis(x1, y1, z1, x3, y3, z3));
-    rotMatrix.multWithLeft(RotateAxis(x3, y3, z3, x2, y2, z2));
+    Matrix first(RotateAxis(x1, y1, z1, x3, y3, z3));
+    Matrix second(RotateAxis(x3, y3, z3, x2, y2, z2));
+
+    Matrix rot = IdentityMatrix();
+
+    int speedup = 3;
+    for (int i = 0; i < speedup; i++) {
+        rot.multWithRight(first);
+        rot.multWithLeft(second);
+    }
+
+    rotMatrix.multWithLeft(rot);
 }
 
 Engine::Engine() : rotMatrix(IdentityMatrix()) {
@@ -195,7 +203,6 @@ void Engine::loadMesh() {
     }
 
     radius = tree[0].radius();
-    std::cout << "Loaded mesh with " << numVertices << " vertices and " << numElements << " indices" << std::endl;
 
     glBindVertexArray(modelVao);
     glBindBuffer(GL_ARRAY_BUFFER, modelVbo);
