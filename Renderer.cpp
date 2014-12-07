@@ -111,7 +111,7 @@ Renderer::Renderer() : model(IdentityMatrix()), view(IdentityMatrix()) {
     frames = 0;
     prevTime = 0;
 
-    maxFps = 120;
+    maxFps = 25;
 
     viewWidth = viewHeight = 1;
 }

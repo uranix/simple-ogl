@@ -1,6 +1,8 @@
 #ifndef __BOX_H__
 #define __BOX_H__
 
+#include <limits>
+
 struct AABB {
     float x1, y1, z1, x2, y2, z2;
     AABB() {

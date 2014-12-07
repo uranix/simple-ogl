@@ -4,6 +4,7 @@
 
 #include "Mesh.h"
 #include "Box.h"
+#include "DooSabin.h"
 
 #include "tinyfiledialogs.h"
 
@@ -30,6 +31,14 @@ void Engine::keyboard(unsigned char key, int x, int y) {
         case 'q':
         case 'Q':
             glutLeaveMainLoop();
+            break;
+        case 'r':
+        case 'R':
+            refine();
+            break;
+        case 's':
+        case 'S':
+            saveMesh();
             break;
         case 'n':
         case 'N':
@@ -129,7 +138,7 @@ void Engine::dragging(int dx, int dy) {
 Engine::Engine() : rotMatrix(IdentityMatrix()) {
     zoomFactor = 0;
     wireframe = false;
-    interpnorm = true;
+    interpnorm = false;
     maxLevels = 15;
 
     viewWidth = viewHeight = 1;
@@ -144,21 +153,18 @@ Engine::Engine() : rotMatrix(IdentityMatrix()) {
     glGenBuffers(1, &treeIbo);
 }
 
-void Engine::loadMesh() {
-    const char *filters[] = {"*.ply", "*.PLY"};
-    const char *fn = tinyfd_openFileDialog("Load PLY file", "", 2, filters, 0);
-
-    if (!fn)
-        return;
-
+void Engine::refine() {
     try {
-        mesh = std::move(std::unique_ptr<PLYMesh>(new PLYMesh(fn)));
+        mesh = std::move(std::unique_ptr<DooSabin>(new DooSabin(*mesh)));
         m = std::move(std::unique_ptr<TriMesh>(new TriMesh(*mesh)));
     } catch (std::exception &e) {
-        std::cerr << "Loading mesh failed: " << e.what() << std::endl;
+        std::cerr << "Refine mesh failed: " << e.what() << std::endl;
         return;
     }
+    buildTree();
+}
 
+void Engine::buildTree() {
     const std::vector<Point> &vertexData = m->vertsWithNormals();
     const std::vector<Face> &faceData = m->faces();
 
@@ -233,6 +239,35 @@ void Engine::loadMesh() {
     glBindVertexArray(0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
+
+void Engine::saveMesh() {
+    const char *filters[] = {"*.ply", "*.PLY"};
+    const char *fn = tinyfd_saveFileDialog("Save PLY file", "", 2, filters);
+
+    try {
+        mesh->save(fn);
+    } catch (std::exception &e) {
+        std::cout << "Exception while saving mesh: " << e.what() << std::endl;
+    }
+}
+
+void Engine::loadMesh() {
+    const char *filters[] = {"*.ply", "*.PLY"};
+    const char *fn = tinyfd_openFileDialog("Load PLY file", "", 2, filters, 0);
+
+    if (!fn)
+        return;
+
+    try {
+        mesh = std::move(std::unique_ptr<PLYMesh>(new PLYMesh(fn)));
+        m = std::move(std::unique_ptr<TriMesh>(new TriMesh(*mesh)));
+    } catch (std::exception &e) {
+        std::cerr << "Loading mesh failed: " << e.what() << std::endl;
+        return;
+    }
+
+    buildTree();
 }
 
 Matrix Engine::getViewMatrix() {
@@ -320,7 +355,7 @@ void putLine(float xkey, float xval, float yline, const std::string &key, const 
 void Engine::showOverlay(Renderer &r) {
     glColor4f(0, 0, 0, .8f);
 
-    float widthpx = 400.f;
+    float widthpx = 480.f;
     float heightpx = 240.f;
 
     glBegin(GL_QUADS);
@@ -359,7 +394,7 @@ void Engine::showOverlay(Renderer &r) {
     y -= 30.f;
     putLine(x1, x1, y, "", "Drag to rotate model, rotate wheel to zoom");
     y -= 20.f;
-    putLine(x1, x1, y, "", "Esc, Q : quit,  +/-: change level,  L: load mesh");
+    putLine(x1, x1, y, "", "Esc, Q : quit,  +/-: change level,  L: load mesh,  R: refine mesh,  S: save mesh");
     y -= 20.f;
     putLine(x1, x1, y, "", "Togglers: W : wireframe mode,  C: face culling, N: normal smoothing");
 }

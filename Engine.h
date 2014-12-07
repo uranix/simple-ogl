@@ -37,7 +37,10 @@ struct Engine {
     GLuint treeIbo;
 
     Engine();
+    void refine();
+    void saveMesh();
     void loadMesh();
+    void buildTree();
     Matrix getViewMatrix();
     void showScene(Renderer &r);
     void drawModel(Renderer &r);

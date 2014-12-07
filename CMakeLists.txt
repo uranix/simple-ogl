@@ -25,7 +25,7 @@ include_directories(${OPENGL_INCLUDE_DIR})
 include_directories(external/freeglut/include)
 include_directories(external/glew/include)
 
-set(SOURCES main.cpp Engine.cpp Renderer.cpp EngineFacede.cpp tinyfiledialogs.c)
+set(SOURCES main.cpp Engine.cpp Renderer.cpp EngineFacede.cpp Mesh.cpp DooSabin.cpp tinyfiledialogs.c)
 
 configure_file(transform.vert transform.vert COPYONLY)
 configure_file(triangles.geom triangles.geom COPYONLY)
