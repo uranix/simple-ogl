@@ -83,23 +83,29 @@ GLuint linkShaders(std::vector<GLuint> &shaders) {
     return program;
 }
 
-GLuint buildShaderProgram() {
+GLuint buildShaderProgramForModel() {
     std::vector<GLuint> shaders;
 
-    shaders.push_back(compileShader(GL_VERTEX_SHADER, "shader.vert"));
-    shaders.push_back(compileShader(GL_FRAGMENT_SHADER, "shader.frag"));
+    shaders.push_back(compileShader(GL_VERTEX_SHADER, "transform.vert"));
+    shaders.push_back(compileShader(GL_GEOMETRY_SHADER, "triangles.geom"));
+    shaders.push_back(compileShader(GL_FRAGMENT_SHADER, "light.frag"));
+
+    return linkShaders(shaders);
+}
+
+GLuint buildShaderProgramForBoxes() {
+    std::vector<GLuint> shaders;
+
+    shaders.push_back(compileShader(GL_VERTEX_SHADER, "transform.vert"));
+    shaders.push_back(compileShader(GL_GEOMETRY_SHADER, "lines.geom"));
+    shaders.push_back(compileShader(GL_FRAGMENT_SHADER, "light.frag"));
 
     return linkShaders(shaders);
 }
 
 Renderer::Renderer() : model(IdentityMatrix()), view(IdentityMatrix()) {
-    program = buildShaderProgram();
-
-    modelView    = glGetUniformLocation(program, "modelView");
-    normalMatrix = glGetUniformLocation(program, "normalMatrix");
-    projMatrix   = glGetUniformLocation(program, "projMatrix");
-    mainColor    = glGetUniformLocation(program, "mainColor");
-    lightIntens  = glGetUniformLocation(program, "lightIntens");
+    modelProgram = buildShaderProgramForModel();
+    boxesProgram = buildShaderProgramForBoxes();
 
     fps = 0;
     frames = 0;
@@ -108,6 +114,20 @@ Renderer::Renderer() : model(IdentityMatrix()), view(IdentityMatrix()) {
     maxFps = 120;
 
     viewWidth = viewHeight = 1;
+}
+
+void Renderer::useModelShader() {
+    glUseProgram(modelProgram);
+}
+
+void Renderer::useBoxesShader() {
+    glUseProgram(boxesProgram);
+}
+
+GLuint program() {
+    int prog;
+    glGetIntegerv(GL_CURRENT_PROGRAM, &prog);
+    return prog;
 }
 
 float Renderer::getFps() const {
@@ -147,25 +167,35 @@ void Renderer::setViewMatrix(const Matrix &m) {
 void Renderer::updateModelView() {
     Matrix tmp(model);
     tmp.multWithLeft(view);
+    GLint modelView = glGetUniformLocation(program(), "modelView");
     glUniformMatrix4fv(modelView, /*num*/1, /*row major*/GL_TRUE, tmp.data());
 
     tmp.inverse();
     tmp.transpose();
+    GLint normalMatrix = glGetUniformLocation(program(), "normalMatrix");
     glUniformMatrix4fv(normalMatrix, 1, GL_TRUE, tmp.data());
 }
 
 void Renderer::setPerspective() {
     PerspectiveMatrix m(0.5f, 4.5f, 30, viewWidth / viewHeight);
+    GLint projMatrix = glGetUniformLocation(program(), "projMatrix");
     glUniformMatrix4fv(projMatrix, /*num*/1, /*row major*/GL_TRUE, m.data());
 }
 
 void Renderer::setOrtho() {
     OrthoMatrix m(0.5f, 4.5f, 1.0f, viewWidth / viewHeight);
+    GLint projMatrix = glGetUniformLocation(program(), "projMatrix");
     glUniformMatrix4fv(projMatrix, /*num*/1, /*row major*/GL_TRUE, m.data());
 }
 
 void Renderer::setColor(float r, float g, float b, float a) {
+    GLint mainColor = glGetUniformLocation(program(), "mainColor");
     glUniform4f(mainColor, r, g, b, a);
+}
+
+void Renderer::smoothNormals(bool v) {
+    GLint smoothNormals = glGetUniformLocation(program(), "smoothNormals");
+    glUniform1i(smoothNormals, v ? 1 : 0);
 }
 
 void Renderer::reshape(GLint w, GLint h) {
@@ -174,5 +204,6 @@ void Renderer::reshape(GLint w, GLint h) {
 }
 
 void Renderer::setLightIntens(float v) {
+    GLint lightIntens = glGetUniformLocation(program(), "lightIntens");
     glUniform1f(lightIntens, v);
 }

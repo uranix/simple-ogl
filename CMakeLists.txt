@@ -27,8 +27,10 @@ include_directories(external/glew/include)
 
 set(SOURCES main.cpp Engine.cpp Renderer.cpp EngineFacede.cpp tinyfiledialogs.c)
 
-configure_file(shader.vert shader.vert COPYONLY)
-configure_file(shader.frag shader.frag COPYONLY)
+configure_file(transform.vert transform.vert COPYONLY)
+configure_file(triangles.geom triangles.geom COPYONLY)
+configure_file(lines.geom lines.geom COPYONLY)
+configure_file(light.frag light.frag COPYONLY)
 
 add_executable(meshview ${SOURCES})
 target_link_libraries(meshview ${OPENGL_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} freeglut_static libglew_static)

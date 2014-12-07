@@ -5,8 +5,10 @@
 #include <GL/freeglut.h>
 
 #include "Matrix.h"
+#include "Mesh.h"
 
 #include <vector>
+#include <memory>
 
 struct Renderer;
 
@@ -17,14 +19,16 @@ struct Engine {
     int zoomFactor;
     bool wireframe;
     bool cull;
+    bool interpnorm;
 
     Matrix rotMatrix;
     int level;
     int maxLevels;
     float radius;
 
-    std::string meshfile;
-    float cx, cy, cz; /* model center */
+    std::unique_ptr<Mesh> mesh;
+    std::unique_ptr<TriMesh> m;
+
     GLuint modelVao;
     GLuint wireVao;
     GLuint modelVbo;
@@ -32,12 +36,12 @@ struct Engine {
     GLuint treeVbo;
     GLuint treeIbo;
 
-    int numVertices, numElements;
-
     Engine();
     void loadMesh();
     Matrix getViewMatrix();
     void showScene(Renderer &r);
+    void drawModel(Renderer &r);
+    void drawBoxes(Renderer &r);
     void showOverlay(Renderer &r);
     void keyboard(unsigned char key, int x, int y);
     void click(int button, int state, int x, int y);

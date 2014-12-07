@@ -1,6 +1,8 @@
 #ifndef __MATRIX_H__
 #define __MATRIX_H__
 
+#include "Point.h"
+
 #include <cstring>
 #include <cassert>
 #include <cmath>
@@ -110,11 +112,11 @@ struct IdentityMatrix : public Matrix {
 };
 
 struct Translate : public Matrix {
-    Translate(float x, float y, float z) {
+    Translate(const Point &p) {
         m[0][0] = m[1][1] = m[2][2] = m[3][3] = 1;
-        m[0][3] = x;
-        m[1][3] = y;
-        m[2][3] = z;
+        m[0][3] = p.x;
+        m[1][3] = p.y;
+        m[2][3] = p.z;
     }
 };
 

@@ -7,12 +7,8 @@
 #include "Matrix.h"
 
 struct Renderer {
-    GLuint program;
-    GLint modelView;
-    GLint normalMatrix;
-    GLint projMatrix;
-    GLint mainColor;
-    GLint lightIntens;
+    GLuint modelProgram;
+    GLuint boxesProgram;
 
     Matrix model;
     Matrix view;
@@ -25,11 +21,14 @@ struct Renderer {
     float viewWidth, viewHeight;
 
     Renderer();
+    void useModelShader();
+    void useBoxesShader();
     void updateModelView();
     void setModelMatrix(const Matrix &m);
     void setViewMatrix(const Matrix &m);
     void setColor(float r, float g, float b, float a);
     void setLightIntens(float v);
+    void smoothNormals(bool v);
     void setPerspective();
     void setOrtho();
     void reshape(int x, int y);

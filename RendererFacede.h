@@ -36,10 +36,6 @@ public:
         glDepthFunc(GL_LEQUAL);
         glDepthRange(0, 1);
 
-        glUseProgram(instance().program);
-
-        instance().setPerspective();
-//        instance().setOrtho();
         EngineFacede::showScene(instance());
         glUseProgram(0);
 

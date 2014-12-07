@@ -1,6 +1,8 @@
 #ifndef __MESH_H__
 #define __MESH_H__
 
+#include "Point.h"
+
 #include <string>
 #include <fstream>
 #include <stdexcept>
@@ -9,18 +11,6 @@
 #include <vector>
 #include <limits>
 #include <cassert>
-
-struct Point {
-    float x, y, z;
-    Point() { }
-    Point(float x, float y, float z) : x(x), y(y), z(z) { }
-    Point(const Point &p, const Point &o) : x(p.x - o.x), y(p.y - o.y), z(p.z - o.z) { }
-    void add(const Point &p) {
-        x += p.x;
-        y += p.y;
-        z += p.z;
-    }
-};
 
 struct Face {
     int v1, v2, v3;
@@ -38,21 +28,58 @@ struct Face {
     }
 };
 
+struct PolyFace {
+    std::vector<int>::const_iterator begin;
+    std::vector<int>::const_iterator end;
+    PolyFace(const size_t f, const std::vector<int> &fs, const std::vector<int> &fv) {
+        begin = fv.begin() + fs[f];
+        end   = fv.begin() + fs[f + 1];
+    }
+};
+
 class Mesh {
+    std::vector<Point> _vert;
+    std::vector<int> _facestart;
+    std::vector<int> _facevert;
+
+    Point _sum;
+
+    std::string _filename;
+public:
+    Mesh(const std::string &filename) : _sum(0, 0, 0), _filename(filename) {
+        _facestart.push_back(0);
+    }
+    const std::string &filename() const { return _filename; }
+    size_t numVertices() const { return _vert.size(); }
+    size_t numFaces() const { return _facestart.size() - 1; }
+    Point center() const {
+        size_t nV = numVertices();
+        return Point(_sum.x / nV, _sum.y / nV, _sum.z / nV);
+    }
+
+    std::vector<Point> verts() const { return _vert; }
+    PolyFace face(size_t idx) const { return PolyFace(idx, _facestart, _facevert); }
+
+protected:
+    void pushVertex(const Point &p) {
+        _vert.push_back(p);
+        _sum.add(p);
+    }
+
+    void pushFace(const std::vector<int> &vs) {
+        int lastEnd = _facestart.back() + vs.size();
+        _facestart.push_back(lastEnd);
+        _facevert.insert(_facevert.end(), vs.begin(), vs.end());
+        assert(_facevert.size() == _facestart.back());
+    }
+};
+
+class PLYMesh : public Mesh {
     bool startsWith(const std::string &line, const std::string &prefix) {
         return 0 == line.compare(0, prefix.size(), prefix);
     }
-
-    std::vector<Point> _v;
-    std::vector<Face> _f;
 public:
-    const std::vector<Point> &vertsWithNormals() const {
-        return _v;
-    }
-    const std::vector<Face> &faces() const {
-        return _f;
-    }
-    Mesh(const std::string &filename) {
+    PLYMesh(const std::string &filename) : Mesh(filename) {
         std::string line;
         std::fstream f(filename, std::ios::in);
         if (!f)
@@ -84,108 +111,65 @@ public:
         if (nV < 0 || nF < 0)
             throw std::invalid_argument("No vertex or face element in mesh");
         std::stringstream ss;
+        ss.exceptions(std::ios::failbit);
         for (int i = 0; i < nV; i++) {
             getline(f, line);
             ss.str(line);
             float x, y, z;
             ss >> x >> y >> z;
-            _v.push_back(Point(x, y, z));
+            ss.clear();
+            pushVertex(Point(x, y, z));
         }
-        std::vector<Point> _n(nV, Point(0, 0, 0));
         for (int i = 0; i < nF; i++) {
             getline(f, line);
             ss.str(line);
-            int n, p1, p2, p3;
-            ss >> n >> p1 >> p2 >> p3;
-            if (n != 3)
-                throw std::invalid_argument("Non-triangle face encountered");
-            const Face ff(p1, p2, p3);
-            _f.push_back(ff);
-            const Point norm = ff.normal(_v);
-            _n[p1].add(norm);
-            _n[p2].add(norm);
-            _n[p3].add(norm);
+            int n;
+            ss >> n;
+            if (n < 3)
+                throw std::invalid_argument("Face has less than 3 vertices");
+            std::vector<int> fs;
+            for (int j = 0; j < n; j++) {
+                int p;
+                ss >> p;
+                fs.push_back(p);
+            }
+            pushFace(fs);
+            ss.clear();
         }
-        _v.insert(_v.end(), _n.begin(), _n.end());
     }
 };
 
-struct AABB {
-    float x1, y1, z1, x2, y2, z2;
-    AABB() {
-        x1 = std::numeric_limits<float>::max();
-        y1 = std::numeric_limits<float>::max();
-        z1 = std::numeric_limits<float>::max();
-        x2 = std::numeric_limits<float>::lowest();
-        y2 = std::numeric_limits<float>::lowest();
-        z2 = std::numeric_limits<float>::lowest();
+class TriMesh {
+    std::vector<Point> _v;
+    std::vector<Face> _f;
+public:
+    const std::vector<Point> &vertsWithNormals() const {
+        return _v;
     }
-    void add(const Point &p) {
-        if (p.x > x2) x2 = p.x;
-        if (p.x < x1) x1 = p.x;
-        if (p.y > y2) y2 = p.y;
-        if (p.y < y1) y1 = p.y;
-        if (p.z > z2) z2 = p.z;
-        if (p.z < z1) z1 = p.z;
+    const std::vector<Face> &faces() const {
+        return _f;
     }
-    bool isInLeft(const Point &pp, const Point &c) const {
-        const Point p(pp, c);
-        float dx, dy, dz;
-        dx = x2 - x1;
-        dy = y2 - y1;
-        dz = z2 - z1;
-        if (dx >= dy && dx >= dz)
-            return 2 * p.x < x1 + x2;
-        if (dy >= dx && dy >= dz)
-            return 2 * p.y < y1 + y2;
-        if (dz >= dx && dz >= dy)
-            return 2 * p.z < z1 + z2;
-        assert(false);
-        return false;
-    }
-    bool hasOnLeft (const Face &f, const std::vector<Point> &ps, const Point &c) {
-        return isInLeft(ps[f.v1], c) ||
-               isInLeft(ps[f.v2], c) ||
-               isInLeft(ps[f.v3], c);
-    }
-    bool hasOnRight(const Face &f, const std::vector<Point> &ps, const Point &c) {
-        return !isInLeft(ps[f.v1], c) ||
-               !isInLeft(ps[f.v2], c) ||
-               !isInLeft(ps[f.v3], c);
-    }
-    float radius() const {
-        float dx, dy, dz;
-        dx = x2 - x1;
-        dy = y2 - y1;
-        dz = z2 - z1;
-        return (dx + dy + dz) / 2;
-    }
-    bool isEmpty() const {
-        return x2 < x1;
-    }
-    void inflate(float d) {
-        x1 -= d;
-        y1 -= d;
-        z1 -= d;
-        x2 += d;
-        y2 += d;
-        z2 += d;
-    }
-    void writeVertex(float buf[]) {
-        if (isEmpty()) {
-            for (int j = 0; j < 8 * 3; j++)
-                buf[j] = 0;
-            return;
+    TriMesh(const Mesh &m) : _v(m.verts()) {
+        std::vector<Point> _n(_v.size(), Point(0, 0, 0));
+        for (size_t i = 0; i < m.numFaces(); i++) {
+            const PolyFace &pf = m.face(i);
+            std::vector<int> face(pf.begin, pf.end);
+            int p1 = face[0];
+            for (size_t j = 1; j < face.size() - 1; j++) {
+                int p2 = face[j];
+                int p3 = face[j + 1];
+                const Face &f = Face(p1, p2, p3);
+                _f.push_back(f);
+                const Point norm = f.normal(_v);
+                _n[p1].add(norm);
+                _n[p2].add(norm);
+                _n[p3].add(norm);
+            }
         }
-        int j = 0;
-        buf[j++] = x1; buf[j++] = y1; buf[j++] = z1;
-        buf[j++] = x2; buf[j++] = y1; buf[j++] = z1;
-        buf[j++] = x2; buf[j++] = y2; buf[j++] = z1;
-        buf[j++] = x1; buf[j++] = y2; buf[j++] = z1;
-        buf[j++] = x1; buf[j++] = y1; buf[j++] = z2;
-        buf[j++] = x2; buf[j++] = y1; buf[j++] = z2;
-        buf[j++] = x2; buf[j++] = y2; buf[j++] = z2;
-        buf[j++] = x1; buf[j++] = y2; buf[j++] = z2;
+        for (size_t i = 0; i < _n.size(); i++) {
+            _n[i].normalize();
+        }
+        _v.insert(_v.end(), _n.begin(), _n.end());
     }
 };
 

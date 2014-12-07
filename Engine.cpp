@@ -3,6 +3,7 @@
 #include "Matrix.h"
 
 #include "Mesh.h"
+#include "Box.h"
 
 #include "tinyfiledialogs.h"
 
@@ -29,6 +30,10 @@ void Engine::keyboard(unsigned char key, int x, int y) {
         case 'q':
         case 'Q':
             glutLeaveMainLoop();
+            break;
+        case 'n':
+        case 'N':
+            interpnorm = !interpnorm;
             break;
         case 'w':
         case 'W':
@@ -124,6 +129,7 @@ void Engine::dragging(int dx, int dy) {
 Engine::Engine() : rotMatrix(IdentityMatrix()) {
     zoomFactor = 0;
     wireframe = false;
+    interpnorm = true;
     maxLevels = 15;
 
     viewWidth = viewHeight = 1;
@@ -136,8 +142,6 @@ Engine::Engine() : rotMatrix(IdentityMatrix()) {
 
     glGenBuffers(1, &treeVbo);
     glGenBuffers(1, &treeIbo);
-
-    numVertices = numElements = 0;
 }
 
 void Engine::loadMesh() {
@@ -147,37 +151,25 @@ void Engine::loadMesh() {
     if (!fn)
         return;
 
-    std::unique_ptr<Mesh> m;
     try {
-        m.reset(new Mesh(fn));
+        mesh = std::move(std::unique_ptr<PLYMesh>(new PLYMesh(fn)));
+        m = std::move(std::unique_ptr<TriMesh>(new TriMesh(*mesh)));
     } catch (std::exception &e) {
         std::cerr << "Loading mesh failed: " << e.what() << std::endl;
         return;
     }
 
-    meshfile = fn;
     const std::vector<Point> &vertexData = m->vertsWithNormals();
     const std::vector<Face> &faceData = m->faces();
 
-    numVertices = vertexData.size() / 2;
-    numElements = faceData.size() * 3;
-
-    cx = 0, cy = 0, cz = 0;
-    for (int i = 0; i < numVertices; i++) {
-        cx += vertexData[i].x;
-        cy += vertexData[i].y;
-        cz += vertexData[i].z;
-    }
-    cx /= numVertices;
-    cy /= numVertices;
-    cz /= numVertices;
+    int numVertices = vertexData.size() / 2;
 
     std::vector<std::vector<Face> > faceTree((1 << maxLevels) - 1);
 
     faceTree[0] = faceData;
 
     std::vector<AABB> tree(faceTree.size());
-    Point center(cx, cy, cz);
+    Point center = mesh->center();
 
     for (size_t i = 0; i < faceTree.size(); i++) {
         AABB box;
@@ -217,11 +209,14 @@ void Engine::loadMesh() {
     glBindVertexArray(wireVao);
     std::vector<float> boxData(8 * 3 * tree.size());
     std::vector<GLuint> treeIdx;
-    GLuint boxIdx[4 * 4] = {0, 1, 2, 3, 7, 6, 5, 4, 1, 0, 4, 5, 6, 7, 3, 2};
+    GLuint boxIdx[4 * 6] = {
+        0, 1, 2, 3, 0, 3, 1, 2,
+        7, 6, 5, 4, 4, 7, 5, 6,
+        1, 5, 0, 4, 3, 7, 2, 6};
     for (size_t i = 0; i < tree.size(); i++) {
         tree[i].writeVertex(&boxData[8 * 3 * i]);
-        treeIdx.insert(treeIdx.end(), boxIdx, boxIdx + 4 * 4);
-        for (int j = 0; j < 16; j++)
+        treeIdx.insert(treeIdx.end(), boxIdx, boxIdx + 4 * 6);
+        for (int j = 0; j < 4 * 6; j++)
             boxIdx[j] += 8;
     }
 
@@ -246,21 +241,21 @@ Matrix Engine::getViewMatrix() {
 
     tmpMatrix.multWithLeft(rotMatrix);
     tmpMatrix.multWithLeft(Scale(sf));
-    tmpMatrix.multWithLeft(Translate(0.f, 0.f, -2.f));
+    tmpMatrix.multWithLeft(Translate(Point(0.f, 0.f, -2.f)));
 
     return tmpMatrix;
 }
 
-void Engine::showScene(Renderer &r) {
-    if (numVertices == 0)
-        return;
+void Engine::drawModel(Renderer &r) {
+    r.useModelShader();
+    r.setPerspective();
 
     r.setViewMatrix(getViewMatrix());
 
     glBindVertexArray(modelVao);
     glBindBuffer(GL_ARRAY_BUFFER, modelVbo);
 
-    Matrix translateToCenter(Translate(-cx, -cy, -cz));
+    Matrix translateToCenter(Translate(-mesh->center()));
     Matrix mm(translateToCenter);
     r.setColor(.8f, .75f, .5f, 1.f);
     r.setLightIntens(.5f);
@@ -276,7 +271,18 @@ void Engine::showScene(Renderer &r) {
     else
         glDisable(GL_CULL_FACE);
 
-    glDrawElements(GL_TRIANGLES, numElements, GL_UNSIGNED_INT, 0);
+    r.smoothNormals(interpnorm);
+
+    glDrawElements(GL_TRIANGLES, m->faces().size() * 3, GL_UNSIGNED_INT, 0);
+    glBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
+
+void Engine::drawBoxes(Renderer &r) {
+    r.useBoxesShader();
+    r.setPerspective();
+
+    r.setViewMatrix(getViewMatrix());
 
     glBindVertexArray(wireVao);
     glBindBuffer(GL_ARRAY_BUFFER, treeVbo);
@@ -290,10 +296,18 @@ void Engine::showScene(Renderer &r) {
     int end = beg + (1 << level);
 
     glDisable(GL_CULL_FACE);
-    glDrawElements(GL_QUADS, 16 * (end - beg), GL_UNSIGNED_INT, (GLvoid *)(16 * beg * sizeof(GLuint)));
+    glDrawElements(GL_LINES, 4 * 6 * (end - beg), GL_UNSIGNED_INT, (GLvoid *)(4 * 6 * beg * sizeof(GLuint)));
 
     glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
+
+void Engine::showScene(Renderer &r) {
+    if (!m)
+        return;
+
+    drawModel(r);
+    drawBoxes(r);
 }
 
 void putLine(float xkey, float xval, float yline, const std::string &key, const std::string &val) {
@@ -304,13 +318,10 @@ void putLine(float xkey, float xval, float yline, const std::string &key, const 
 }
 
 void Engine::showOverlay(Renderer &r) {
-    r.setViewMatrix(IdentityMatrix());
-    r.setModelMatrix(IdentityMatrix());
-
     glColor4f(0, 0, 0, .8f);
 
     float widthpx = 400.f;
-    float heightpx = 220.f;
+    float heightpx = 240.f;
 
     glBegin(GL_QUADS);
     glVertex2f(10.f, 10.f);
@@ -325,26 +336,30 @@ void Engine::showOverlay(Renderer &r) {
     sprintf(buf, "%.2f", r.getFps());
 
     float x1 = 20.f;
-    float x2 = 100.f;
+    float x2 = 120.f;
     float y = heightpx - 10.f;
 
     putLine(x1, x2, y, "fps:", buf);
     y -= 20.f;
-    putLine(x1, x2, y, "mesh:", meshfile.empty() ? std::string("(no mesh loaded)") : meshfile);
+    putLine(x1, x2, y, "mesh:", mesh ? mesh->filename() : std::string("No mesh loaded"));
     y -= 20.f;
-    putLine(x1, x2, y, "vertex count:", std::to_string(static_cast<long long>(numVertices)));
+    long long numVertices = mesh ? mesh->numVertices() : 0;
+    putLine(x1, x2, y, "vertex count:", std::to_string(numVertices));
     y -= 20.f;
-    putLine(x1, x2, y, "face count:", std::to_string(static_cast<long long>(numElements / 3)));
+    long long numFaces = mesh ? mesh->numFaces() : 0;
+    putLine(x1, x2, y, "face count:", std::to_string(numFaces));
     y -= 20.f;
     putLine(x1, x2, y, "tree level:", std::to_string(static_cast<long long>(level)));
     y -= 20.f;
     putLine(x1, x2, y, "face culling:", cull ? "on" : "off");
     y -= 20.f;
     putLine(x1, x2, y, "wireframe:", wireframe ? "on" : "off");
+    y -= 20.f;
+    putLine(x1, x2, y, "smooth normals:", interpnorm ? "on" : "off");
     y -= 30.f;
     putLine(x1, x1, y, "", "Drag to rotate model, rotate wheel to zoom");
     y -= 20.f;
     putLine(x1, x1, y, "", "Esc, Q : quit,  +/-: change level,  L: load mesh");
     y -= 20.f;
-    putLine(x1, x1, y, "", "W : toggle wireframe mode,  C: toggle face culling");
+    putLine(x1, x1, y, "", "Togglers: W : wireframe mode,  C: face culling, N: normal smoothing");
 }

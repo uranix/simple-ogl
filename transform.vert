@@ -7,10 +7,11 @@ uniform mat4 modelView;
 uniform mat4 normalMatrix;
 uniform mat4 projMatrix;
 
-smooth out vec4 theNormal;
+out vec4 theNormal;
+out vec4 eyeCoord;
 
 void main() {
-    vec4 eyeCoord = modelView * position;
+    eyeCoord = modelView * position;
     gl_Position = projMatrix * eyeCoord;
     theNormal = normalMatrix * normal;
 }
