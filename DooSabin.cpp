@@ -90,7 +90,8 @@ DooSabin::DooSabin(const Mesh &m) : Mesh(m.filename() + "*") {
     std::vector<std::vector<int> > origEdges(m.numVertices());
     std::vector<Point> innerPoint(m.numVertices());
     std::vector<std::vector<int> > origFaces(m.numVertices());
-    std::vector<bool> goodVertex(m.numVertices());
+    std::vector<bool> borderVertex(m.numVertices());
+    std::vector<bool> orphanVertex(m.numVertices());
 
     for (size_t i = 0; i < m.numFaces(); i++) {
         PolyFace f = m.face(i);
@@ -115,13 +116,28 @@ DooSabin::DooSabin(const Mesh &m) : Mesh(m.filename() + "*") {
     }
 
     for (size_t i = 0; i < origEdges.size(); i++) {
-        goodVertex[i] = origEdges[i].size() == origFaces[i].size();
-        if (goodVertex[i])
+        borderVertex[i] = origEdges[i].size() != origFaces[i].size();
+        orphanVertex[i] = origFaces[i].size() == 0;
+
+        if (!borderVertex[i] && !orphanVertex[i]) {
+            if (origFaces[i].size() < 3) {
+                std::cerr << "Vertex " << i << " has less than 3 faces around and is not a boundary one" << std::endl;
+                throw std::logic_error("Non-boundary vertex with less than 3 faces");
+            }
             continue;
+        }
         std::cerr << "Defect at vertex " << i
             << ", edges = " << origEdges[i].size()
-            << ", faces = " << origFaces[i].size()
-            << ". The vertex will be skipped"<< std::endl;
+            << ", faces = " << origFaces[i].size();
+        int def = origEdges[i].size() - origFaces[i].size();
+        if (def == 1)
+            std::cout << " Looks like a face fan" << std::endl;
+        else if (def == 0)
+            std::cout << " Orphan vertex" << std::endl;
+        else {
+            std::cout << " No way to resolve" << std::endl;
+            throw std::logic_error("Unrecoverable topology error in mesh");
+        }
     }
 
     std::vector<std::vector<NewPoint> > newVertex(m.numVertices());
@@ -153,9 +169,10 @@ DooSabin::DooSabin(const Mesh &m) : Mesh(m.filename() + "*") {
         std::vector<NewPoint> &v = newVertex[i];
         std::vector<int> vFace;
 
-        std::cout << "Oldvertex " << i << std::endl;
+        if (orphanVertex[i])
+            continue;
 
-        if (!goodVertex[i]) {
+        if (borderVertex[i]) {
             size_t jstarting = v.size();
             for (size_t j = 0; j < v.size(); j++) {
                 PolyFace pf = m.face(v[j].oldface);
@@ -211,14 +228,23 @@ DooSabin::DooSabin(const Mesh &m) : Mesh(m.filename() + "*") {
             }
             if (j + 1 != v.size()) {
                 if (jnext == 0) {
-                    assert(jnext > 0);
+                    std::cerr << "Vertex " << i << std::endl;
+                    for (size_t z = 0; z < v.size(); z++) {
+                        PolyFace pf = m.face(v[z].oldface);
+                        std::cout << "Face " << v[z].oldface << ":";
+                        for (auto x = pf.begin; x != pf.end; x++)
+                            std::cout << " " << *x;
+                        std::cout << std::endl;
+                    }
+                    throw std::logic_error("Faces do not form a fan around vertex");
                 }
                 if (jnext != j + 1)
                     std::swap(v[jnext], v[j + 1]);
             }
             vFace.push_back(v[j].vertex);
         }
-        if (goodVertex[i])
+        assert(!vFace.empty());
+        if (!borderVertex[i])
             pushFace(vFace);
     }
 
@@ -233,7 +259,7 @@ DooSabin::DooSabin(const Mesh &m) : Mesh(m.filename() + "*") {
             cloud1.push_back(cloud1.front());
             cloud2.push_back(cloud2.front());
             std::reverse(cloud2.begin(), cloud2.end());
-
+/*
             std::cout << i << " -> " << j << std::endl;
             for (auto &z : cloud1)
                 std::cout << z.vertex << "," << z.oldface << " ";
@@ -241,7 +267,7 @@ DooSabin::DooSabin(const Mesh &m) : Mesh(m.filename() + "*") {
             for (auto &z : cloud2)
                 std::cout << z.vertex << "," << z.oldface << " ";
             std::cout << std::endl;
-
+*/
             bool found = false;
             size_t ii, jj;
             if (cloud1.size() < 3 || cloud2.size() < 3)
