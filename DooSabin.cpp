@@ -49,43 +49,6 @@ struct NewPoint {
     NewPoint(int v, int f) : vertex(v), oldface(f) { }
 };
 
-struct WindingOrder {
-    const Point &C;
-    const Point &P;
-    const Point &A;
-    const std::vector<Point> &ps;
-
-    WindingOrder(const Point &C, const Point &P, const Point &A, const std::vector<Point> &ps)
-        : C(C), P(P), A(A), ps(ps) { }
-
-    static float det3(const Point &A, const Point &B, const Point &C) {
-        return
-            -A.z*B.y*C.x + A.y*B.z*C.x +
-             A.z*B.x*C.y - A.x*B.z*C.y -
-             A.y*B.x*C.z + A.x*B.y*C.z;
-    }
-
-    float angle(const Point &X) const {
-        Point CA = A;
-        Point CX = X;
-        Point CP = P;
-        CA -= C;
-        CX -= C;
-        CP -= C;
-        CA.normalize();
-        CX.normalize();
-        float v = CA.x * CX.x + CA.y * CX.y + CA.z * CX.z;
-        float an = acos(v / (1 + 1e-5));
-        if (det3(CP, CA, CX) > 0)
-            an = -an;
-        return an;
-    }
-
-    bool operator()(const NewPoint &a, const NewPoint &b) const {
-        return angle(ps[a.vertex]) < angle(ps[b.vertex]);
-    }
-};
-
 DooSabin::DooSabin(const Mesh &m) : Mesh(m.filename() + "*") {
     std::vector<std::vector<int> > origEdges(m.numVertices());
     std::vector<Point> innerPoint(m.numVertices());
