@@ -19,8 +19,10 @@ struct Engine {
     int zoomFactor;
     bool wireframe;
     bool cull;
-    bool interpnorm;
-    bool shadePhong;
+    enum {
+        GOURAUD, PHONG, FLAT
+    } shading;
+    float specularity;
 
     Matrix rotMatrix;
     int level;

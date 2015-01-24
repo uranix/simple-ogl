@@ -42,11 +42,13 @@ void Engine::keyboard(unsigned char key, int x, int y) {
             break;
         case 'n':
         case 'N':
-            interpnorm = !interpnorm;
-            break;
-        case 'g':
-        case 'G':
-            shadePhong = !shadePhong;
+            /* Gouraud -> Phong -> Flat */
+            if (shading == GOURAUD)
+                shading = PHONG;
+            else if (shading == PHONG)
+                shading = FLAT;
+            else
+                shading = GOURAUD;
             break;
         case 'w':
         case 'W':
@@ -65,6 +67,16 @@ void Engine::keyboard(unsigned char key, int x, int y) {
             level--;
             if (level < 0)
                 level = 0;
+            break;
+        case '*':
+            specularity += 0.05f;
+            if (specularity > 1)
+                specularity = 1;
+            break;
+        case '/':
+            specularity -= 0.05f;
+            if (specularity < 0)
+                specularity = 0;
             break;
         case 'l':
         case 'L':
@@ -142,7 +154,8 @@ void Engine::dragging(int dx, int dy) {
 Engine::Engine() : rotMatrix(IdentityMatrix()) {
     zoomFactor = 0;
     wireframe = false;
-    interpnorm = false;
+    shading = GOURAUD;
+    specularity = 0.3;
     maxLevels = 15;
 
     viewWidth = viewHeight = 1;
@@ -297,7 +310,7 @@ void Engine::drawModel(Renderer &r) {
     Matrix translateToCenter(Translate(-mesh->center()));
     Matrix mm(translateToCenter);
     r.setColor(.8f, .75f, .5f, 1.f);
-    r.setLightIntens(.5f);
+    r.setLightIntens(.9f);
     r.setModelMatrix(mm);
 
     if (wireframe)
@@ -310,8 +323,9 @@ void Engine::drawModel(Renderer &r) {
     else
         glDisable(GL_CULL_FACE);
 
-    r.smoothNormals(interpnorm);
-    r.shadePhong(shadePhong);
+    r.smoothNormals(shading != FLAT);
+    r.shadePhong(shading == PHONG);
+    r.setSpecularity(specularity);
 
     glDrawElements(GL_TRIANGLES, m->faces().size() * 3, GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);
@@ -395,13 +409,14 @@ void Engine::showOverlay(Renderer &r) {
     y -= 20.f;
     putLine(x1, x2, y, "wireframe:", wireframe ? "on" : "off");
     y -= 20.f;
-    putLine(x1, x2, y, "smooth normals:", interpnorm ? "on" : "off");
+    putLine(x1, x2, y, "shading:", shading == FLAT ? "flat" : (shading == PHONG ? "Phong" : "Gouraud"));
     y -= 20.f;
-    putLine(x1, x2, y, "shading:", shadePhong ? "Phong" : "Gouraud");
+    sprintf(buf, "%.2f", specularity);
+    putLine(x1, x2, y, "specularity:", buf);
     y -= 30.f;
     putLine(x1, x1, y, "", "Drag to rotate model, rotate wheel to zoom");
     y -= 20.f;
-    putLine(x1, x1, y, "", "Esc, Q : quit,  +/-: change level,  L: load mesh,  R: refine mesh,  S: save mesh");
+    putLine(x1, x1, y, "", "Esc, Q : quit,  +,-: AABB level, *,/ specularity, L: load, R: refine, S: save mesh");
     y -= 20.f;
-    putLine(x1, x1, y, "", "Togglers: W : wireframe mode,  C: face culling, N: normal smoothing");
+    putLine(x1, x1, y, "", "Togglers: W : wireframe mode,  C: face culling, N: shading");
 }

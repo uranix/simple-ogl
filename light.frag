@@ -3,6 +3,7 @@
 uniform vec4 mainColor;
 uniform float lightIntens;
 uniform int shadePhong;
+uniform float specularity;
 
 in vec3 vertexNormal;
 
@@ -21,7 +22,7 @@ void main() {
     float alpha = 10.0f;
     float specular = pow(clamp(2 * dot(lightdir, norm) * norm.z - lightdir.z, 0, 1), alpha);
 
-    vec3 light = lightColor * mix(diffuse, specular, 0.3);
+    vec3 light = lightColor * mix(diffuse, specular, specularity);
 
     outputColor.xyz = mix(mainColor.xyz, light, lightIntens);
     outputColor.w = 1;

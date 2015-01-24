@@ -203,12 +203,17 @@ void Renderer::shadePhong(bool v) {
     glUniform1i(shadePhong, v ? 1 : 0);
 }
 
-void Renderer::reshape(GLint w, GLint h) {
-    viewWidth = static_cast<float>(w);
-    viewHeight = static_cast<float>(h);
+void Renderer::setSpecularity(float v) {
+    GLint specularity = glGetUniformLocation(program(), "specularity");
+    glUniform1f(specularity, v);
 }
 
 void Renderer::setLightIntens(float v) {
     GLint lightIntens = glGetUniformLocation(program(), "lightIntens");
     glUniform1f(lightIntens, v);
+}
+
+void Renderer::reshape(GLint w, GLint h) {
+    viewWidth = static_cast<float>(w);
+    viewHeight = static_cast<float>(h);
 }
