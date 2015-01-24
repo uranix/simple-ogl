@@ -20,6 +20,7 @@ struct Engine {
     bool wireframe;
     bool cull;
     bool interpnorm;
+    bool shadePhong;
 
     Matrix rotMatrix;
     int level;

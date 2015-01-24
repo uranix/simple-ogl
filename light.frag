@@ -2,14 +2,13 @@
 
 uniform vec4 mainColor;
 uniform float lightIntens;
+uniform int shadePhong;
 
 in vec3 vertexNormal;
 
 out vec4 outputColor;
 void main() {
     vec4 clear = vec4(1, 1, 1, 1);
-
-    int shadePhong = 1;
 
     vec3 norm = shadePhong == 1 ? normalize(vertexNormal) : vertexNormal;
 

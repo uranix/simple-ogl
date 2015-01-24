@@ -44,6 +44,10 @@ void Engine::keyboard(unsigned char key, int x, int y) {
         case 'N':
             interpnorm = !interpnorm;
             break;
+        case 'g':
+        case 'G':
+            shadePhong = !shadePhong;
+            break;
         case 'w':
         case 'W':
             wireframe = !wireframe;
@@ -307,6 +311,7 @@ void Engine::drawModel(Renderer &r) {
         glDisable(GL_CULL_FACE);
 
     r.smoothNormals(interpnorm);
+    r.shadePhong(shadePhong);
 
     glDrawElements(GL_TRIANGLES, m->faces().size() * 3, GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);
@@ -356,7 +361,7 @@ void Engine::showOverlay(Renderer &r) {
     glColor4f(0, 0, 0, .8f);
 
     float widthpx = 480.f;
-    float heightpx = 240.f;
+    float heightpx = 260.f;
 
     glBegin(GL_QUADS);
     glVertex2f(10.f, 10.f);
@@ -391,6 +396,8 @@ void Engine::showOverlay(Renderer &r) {
     putLine(x1, x2, y, "wireframe:", wireframe ? "on" : "off");
     y -= 20.f;
     putLine(x1, x2, y, "smooth normals:", interpnorm ? "on" : "off");
+    y -= 20.f;
+    putLine(x1, x2, y, "shading:", shadePhong ? "Phong" : "Gouraud");
     y -= 30.f;
     putLine(x1, x1, y, "", "Drag to rotate model, rotate wheel to zoom");
     y -= 20.f;

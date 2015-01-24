@@ -29,6 +29,7 @@ struct Renderer {
     void setColor(float r, float g, float b, float a);
     void setLightIntens(float v);
     void smoothNormals(bool v);
+    void shadePhong(bool v);
     void setPerspective();
     void setOrtho();
     void reshape(int x, int y);

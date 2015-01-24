@@ -111,7 +111,7 @@ Renderer::Renderer() : model(IdentityMatrix()), view(IdentityMatrix()) {
     frames = 0;
     prevTime = 0;
 
-    maxFps = 25;
+    maxFps = 120;
 
     viewWidth = viewHeight = 1;
 }
@@ -196,6 +196,11 @@ void Renderer::setColor(float r, float g, float b, float a) {
 void Renderer::smoothNormals(bool v) {
     GLint smoothNormals = glGetUniformLocation(program(), "smoothNormals");
     glUniform1i(smoothNormals, v ? 1 : 0);
+}
+
+void Renderer::shadePhong(bool v) {
+    GLint shadePhong = glGetUniformLocation(program(), "shadePhong");
+    glUniform1i(shadePhong, v ? 1 : 0);
 }
 
 void Renderer::reshape(GLint w, GLint h) {
