@@ -14,4 +14,5 @@ void main() {
     eyeCoord = modelView * position;
     gl_Position = projMatrix * eyeCoord;
     theNormal = normalMatrix * normal;
+    theNormal.xyz = normalize(theNormal.xyz);
 }
